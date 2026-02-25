@@ -1,10 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-import Jobs from './pages/Jobs';
-import Apply from './pages/Apply';
-import Contact from './pages/Contact';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Home from "./pages/Home";
+import Jobs from "./pages/Jobs";
+import Apply from "./pages/Apply";
+import Contact from "./pages/Contact";
 
 export default function App() {
   return (
@@ -13,7 +13,7 @@ export default function App() {
         <Navbar />
         <main className="flex-grow pt-20">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Contact />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/apply/:jobId" element={<Apply />} />
             <Route path="/contact" element={<Contact />} />
