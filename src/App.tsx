@@ -13,10 +13,10 @@ export default function App() {
         <Navbar />
         <main className="flex-grow pt-20">
           <Routes>
-            <Route path="/" element={<Contact />} />
-            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/" element={<Jobs />} />
+            <Route path="/jobs" element={<Home />} />
             <Route path="/apply/:jobId" element={<Apply />} />
-            <Route path="/contact" element={<Home />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </main>
         <Footer />
