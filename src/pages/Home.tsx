@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -102,10 +102,22 @@ function ProfessionCard({ prof, index }: ProfessionCardProps) {
       () => {
         setCurrentImg((prev) => (prev + 1) % prof.images.length);
       },
-      4000 + index * 500,
+      5000 + index * 1000,
     ); // Staggered auto-play
     return () => clearInterval(timer);
   }, [prof.images.length, index]);
+
+  const nextImg = (e: MouseEvent) => {
+    e.preventDefault();
+    setCurrentImg((prev) => (prev + 1) % prof.images.length);
+  };
+
+  const prevImg = (e: MouseEvent) => {
+    e.preventDefault();
+    setCurrentImg(
+      (prev) => (prev - 1 + prof.images.length) % prof.images.length,
+    );
+  };
 
   return (
     <motion.div
@@ -113,69 +125,120 @@ function ProfessionCard({ prof, index }: ProfessionCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className="group bg-slate-50 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300"
+      className="group bg-white rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 border border-slate-100"
     >
-      <div className="h-48 overflow-hidden relative">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentImg}
-            src={prof.images[currentImg]}
-            alt={prof.title}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-        </AnimatePresence>
+      {/* Card Stack Area */}
+      <div className="h-72 bg-slate-50 relative flex items-center justify-center overflow-hidden p-6">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]" />
+        </div>
+
+        <div className="relative w-full h-full flex items-center justify-center">
+          <AnimatePresence mode="popLayout">
+            {prof.images.map((img, i) => {
+              const isCurrent = i === currentImg;
+              const isNext = i === (currentImg + 1) % prof.images.length;
+              const isPrev =
+                i ===
+                (currentImg - 1 + prof.images.length) % prof.images.length;
+
+              if (!isCurrent && !isNext) return null;
+
+              return (
+                <motion.div
+                  key={img}
+                  style={{ zIndex: isCurrent ? 30 : 20 }}
+                  initial={
+                    isNext
+                      ? { x: 40, y: 10, rotate: 6, opacity: 0, scale: 0.9 }
+                      : false
+                  }
+                  animate={{
+                    x: isCurrent ? 0 : 15,
+                    y: isCurrent ? 0 : 10,
+                    rotate: isCurrent ? -2 : 4,
+                    scale: isCurrent ? 1 : 0.95,
+                    opacity: 1,
+                  }}
+                  exit={{
+                    x: -200,
+                    y: -20,
+                    rotate: -15,
+                    opacity: 0,
+                    scale: 0.8,
+                  }}
+                  transition={{ type: "spring", stiffness: 260, damping: 25 }}
+                  className="absolute w-48 h-60 bg-white rounded-2xl shadow-xl border-[6px] border-white overflow-hidden cursor-pointer"
+                  onClick={nextImg}
+                >
+                  <img
+                    src={img}
+                    alt={prof.title}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* Poster-like label */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm py-2 px-3 border-t border-slate-100">
+                    <p className="text-[10px] font-bold text-bretagne-blue uppercase tracking-tighter truncate">
+                      {prof.title}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         {/* Manual Controls for Card */}
-        <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute inset-x-4 bottom-4 flex justify-between items-center z-40">
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setCurrentImg(
-                (prev) => (prev - 1 + prof.images.length) % prof.images.length,
-              );
-            }}
-            className="p-1 bg-white/80 rounded-full text-bretagne-blue hover:bg-white"
+            onClick={prevImg}
+            className="p-2 bg-white shadow-lg rounded-full text-bretagne-blue hover:bg-primary hover:text-white transition-all transform hover:scale-110"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
+
+          <div className="flex gap-1.5">
+            {prof.images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentImg(i);
+                }}
+                className={`w-2 h-2 rounded-full transition-all ${currentImg === i ? "bg-primary w-4" : "bg-slate-300"}`}
+              />
+            ))}
+          </div>
+
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setCurrentImg((prev) => (prev + 1) % prof.images.length);
-            }}
-            className="p-1 bg-white/80 rounded-full text-bretagne-blue hover:bg-white"
+            onClick={nextImg}
+            className="p-2 bg-white shadow-lg rounded-full text-bretagne-blue hover:bg-primary hover:text-white transition-all transform hover:scale-110"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-          {prof.images.map((_, i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all ${currentImg === i ? "bg-white w-3" : "bg-white/50"}`}
-            />
-          ))}
-        </div>
       </div>
+
       <div className="p-8">
-        <h3 className="text-xl font-bold text-bretagne-blue mb-4 group-hover:text-primary transition-colors">
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`w-3 h-3 rounded-full ${prof.color}`} />
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Fiche Métier
+          </span>
+        </div>
+        <h3 className="text-2xl font-display font-bold text-bretagne-blue mb-4 group-hover:text-primary transition-colors">
           {prof.title}
         </h3>
-        <p className="text-slate-600 text-sm leading-relaxed mb-6">
+        <p className="text-slate-600 text-sm leading-relaxed mb-8">
           {prof.description}
         </p>
         <Link
           to="/jobs"
-          className="text-primary font-bold text-sm flex items-center gap-2 group/link"
+          className="inline-flex items-center justify-center w-full bg-slate-50 text-bretagne-blue font-bold py-4 rounded-2xl hover:bg-primary hover:text-white transition-all group/link"
         >
-          En savoir plus
-          <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
+          Découvrir les offres
+          <ArrowRight className="w-4 h-4 ml-2 group-hover/link:translate-x-1 transition-transform" />
         </Link>
       </div>
     </motion.div>
@@ -227,75 +290,115 @@ export default function Home() {
   return (
     <div className="overflow-hidden">
       {/* Poster Carousel Section */}
-      <section className="relative h-[70vh] md:h-[85vh] bg-slate-900 overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPoster}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="absolute inset-0"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-bretagne-blue/80 to-transparent z-10" />
-            <img
-              src={posters[currentPoster].image}
-              alt={posters[currentPoster].title}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+      <section className="relative h-[85vh] md:h-[95vh] bg-slate-50 overflow-hidden flex items-center">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#1a535c_1px,transparent_1px)] [background-size:32px_32px]" />
+        </div>
 
-            <div className="absolute inset-0 z-20 flex items-center">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              <AnimatePresence mode="wait">
                 <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 1.4 }}
-                  className="max-w-2xl"
+                  key={currentPoster}
+                  initial={{ x: -30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 30, opacity: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
                 >
-                  <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-md text-white rounded-full text-sm font-bold mb-6 border border-white/30">
-                    Campagne #CestOK
+                  <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-bold mb-6">
+                    Campagne Bretagne 2026
                   </span>
-                  <h2 className="text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6">
+                  <h1 className="text-5xl md:text-7xl font-display font-bold text-bretagne-blue leading-[1.1] mb-8">
                     {posters[currentPoster].title
                       .split("OK")
                       .map((part, i, arr) => (
                         <span key={i}>
                           {part}
                           {i < arr.length - 1 && (
-                            <span className="text-primary italic">OK</span>
+                            <span className="text-primary italic underline decoration-accent decoration-8 underline-offset-8">
+                              OK
+                            </span>
                           )}
                         </span>
                       ))}
-                  </h2>
-                  <p className="text-xl text-white/80 mb-10 leading-relaxed">
+                  </h1>
+                  <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-lg">
                     {posters[currentPoster].subtitle}
                   </p>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-4">
                     <Link
                       to="/jobs"
-                      className="bg-primary text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-primary/30"
+                      className="bg-primary text-white px-10 py-5 rounded-full font-bold text-xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/30 flex items-center gap-2 group"
                     >
                       Découvrir les métiers
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                     <Link
                       to="/contact"
-                      className="bg-white/10 backdrop-blur-md text-white border-2 border-white/30 px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-bretagne-blue transition-all"
+                      className="bg-white text-bretagne-blue border-2 border-bretagne-blue px-10 py-5 rounded-full font-bold text-xl hover:bg-bretagne-blue hover:text-white transition-all"
                     >
                       Nous contacter
                     </Link>
                   </div>
                 </motion.div>
-              </div>
+              </AnimatePresence>
             </div>
-          </motion.div>
-        </AnimatePresence>
+
+            <div className="order-1 lg:order-2 flex justify-center relative py-10">
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={currentPoster}
+                  initial={{ x: 150, rotate: 15, opacity: 0, scale: 0.8 }}
+                  animate={{ x: 0, rotate: -3, opacity: 1, scale: 1 }}
+                  exit={{ x: -150, rotate: -15, opacity: 0, scale: 0.8 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                  className="relative z-20 w-full max-w-[380px] aspect-[3/4] bg-white rounded-[3rem] shadow-2xl border-[12px] border-white overflow-hidden"
+                >
+                  <img
+                    src={posters[currentPoster].image}
+                    alt={posters[currentPoster].title}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute bottom-10 left-0 right-0 text-center">
+                    <div className="inline-block bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg">
+                      <span className="text-primary font-display font-bold text-xl italic">
+                        #CestOK
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Background card decorations */}
+              <motion.div
+                animate={{ rotate: [6, 8, 6] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[380px] aspect-[3/4] bg-secondary/20 rounded-[3rem] rotate-6 -z-10 border-2 border-secondary/30"
+              />
+              <motion.div
+                animate={{ rotate: [-12, -10, -12] }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[380px] aspect-[3/4] bg-accent/20 rounded-[3rem] -rotate-12 -z-20 border-2 border-accent/30"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Carousel Controls */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex items-center gap-6">
           <button
             onClick={prevPoster}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-colors border border-white/20"
+            className="p-4 rounded-full bg-white shadow-xl text-bretagne-blue hover:bg-primary hover:text-white transition-all transform hover:scale-110 border border-slate-100"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -306,7 +409,7 @@ export default function Home() {
                 key={i}
                 onClick={() => setCurrentPoster(i)}
                 className={`w-3 h-3 rounded-full transition-all ${
-                  currentPoster === i ? "bg-primary w-8" : "bg-white/40"
+                  currentPoster === i ? "bg-primary w-12" : "bg-slate-300"
                 }`}
               />
             ))}
@@ -314,7 +417,7 @@ export default function Home() {
 
           <button
             onClick={nextPoster}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-colors border border-white/20"
+            className="p-4 rounded-full bg-white shadow-xl text-bretagne-blue hover:bg-primary hover:text-white transition-all transform hover:scale-110 border border-slate-100"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
